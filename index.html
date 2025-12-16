@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实时时钟</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a2a6c, #3a7bd5, #00d2ff);
+            color: #fff;
+            padding: 20px;
+            transition: background 1s ease;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 900px;
+            text-align: center;
+            padding: 30px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+        
+        header {
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #ff7e5f, #feb47b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+        
+        .clock-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .time-section {
+            flex: 1;
+            min-width: 250px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px 20px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s, background 0.3s;
+        }
+        
+        .time-section:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .time-label {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: #a0d2ff;
+            font-weight: 500;
+        }
+        
+        .time-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+        
+        .date-display {
+            font-size: 2rem;
+            margin: 20px 0;
+            color: #f8f8f8;
+        }
+        
+        .weekday-display {
+            font-size: 1.8rem;
+            color: #ffcc70;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+        
+        .timezone-selector {
+            margin-bottom: 30px;
+        }
+        
+        .timezone-selector select {
+            padding: 12px 20px;
+            font-size: 1.1rem;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            outline: none;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        .timezone-selector select option {
+            background-color: #2a2a5a;
+            color: white;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .digital-clock {
+            font-size: 2.5rem;
+            font-weight: 600;
+            letter-spacing: 3px;
+            margin: 25px 0;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            display: inline-block;
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.3);
+        }
+        
+        .digital-clock .blink {
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        .theme-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .theme-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .theme-btn.blue {
+            background: linear-gradient(to right, #3a7bd5, #00d2ff);
+            color: white;
+        }
+        
+        .theme-btn.purple {
+            background: linear-gradient(to right, #8A2BE2, #DA70D6);
+            color: white;
+        }
+        
+        .theme-btn.sunset {
+            background: linear-gradient(to right, #FF5F6D, #FFC371);
+            color: white;
+        }
+        
+        .theme-btn.night {
+            background: linear-gradient(to right, #0F2027, #203A43, #2C5364);
+            color: white;
+        }
+        
+        .theme-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .time-display {
+                font-size: 2.5rem;
+            }
+            
+            .date-display {
+                font-size: 1.5rem;
+            }
+            
+            .digital-clock {
+                font-size: 1.8rem;
+                letter-spacing: 2px;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-clock"></i> 实时时钟</h1>
+            <p class="subtitle">准确显示当前日期、时间和星期，每秒钟自动更新</p>
+        </header>
+        
+        <div class="date-display" id="dateDisplay"></div>
+        <div class="weekday-display" id="weekdayDisplay"></div>
+        
+        <div class="clock-container">
+            <div class="time-section">
+                <div class="time-label">小时</div>
+                <div class="time-display" id="hourDisplay">00</div>
+            </div>
+            
+            <div class="time-section">
+                <div class="time-label">分钟</div>
+                <div class="time-display" id="minuteDisplay">00</div>
+            </div>
+            
+            <div class="time-section">
+                <div class="time-label">秒钟</div>
+                <div class="time-display" id="secondDisplay">00</div>
+            </div>
+        </div>
+        
+        <div class="digital-clock" id="digitalClock">
+            <span id="digitalHour">00</span>:<span id="digitalMinute">00</span>:<span class="blink" id="digitalSecond">00</span>
+        </div>
+        
+        <div class="timezone-selector">
+            <select id="timezoneSelect">
+                <option value="local">本地时间</option>
+                <option value="UTC">协调世界时 (UTC)</option>
+                <option value="America/New_York">纽约时间 (EST)</option>
+                <option value="Europe/London">伦敦时间 (GMT)</option>
+                <option value="Asia/Tokyo">东京时间 (JST)</option>
+                <option value="Australia/Sydney">悉尼时间 (AEST)</option>
+            </select>
+        </div>
+        
+        <div class="theme-buttons">
+            <button class="theme-btn blue" onclick="changeTheme('blue')">
+                <i class="fas fa-water"></i> 海洋蓝
+            </button>
+            <button class="theme-btn purple" onclick="changeTheme('purple')">
+                <i class="fas fa-moon"></i> 梦幻紫
+            </button>
+            <button class="theme-btn sunset" onclick="changeTheme('sunset')">
+                <i class="fas fa-sun"></i> 日落橙
+            </button>
+            <button class="theme-btn night" onclick="changeTheme('night')">
+                <i class="fas fa-star"></i> 深空夜
+            </button>
+        </div>
+        
+        <div class="footer">
+            <p>© 2023 实时时钟 | 当前时区: <span id="currentTimezone">本地时间</span> | 更新时间: <span id="updateTime">--:--:--</span></p>
+        </div>
+    </div>
+
+    <script>
+        // 获取DOM元素
+        const hourDisplay = document.getElementById('hourDisplay');
+        const minuteDisplay = document.getElementById('minuteDisplay');
+        const secondDisplay = document.getElementById('secondDisplay');
+        const dateDisplay = document.getElementById('dateDisplay');
+        const weekdayDisplay = document.getElementById('weekdayDisplay');
+        const digitalHour = document.getElementById('digitalHour');
+        const digitalMinute = document.getElementById('digitalMinute');
+        const digitalSecond = document.getElementById('digitalSecond');
+        const timezoneSelect = document.getElementById('timezoneSelect');
+        const currentTimezone = document.getElementById('currentTimezone');
+        const updateTime = document.getElementById('updateTime');
+        
+        // 星期几的中文名称
+        const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+        
+        // 月份的中文名称
+        const months = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
+        
+        // 时区映射
+        const timezoneNames = {
+            'local': '本地时间',
+            'UTC': '协调世界时 (UTC)',
+            'America/New_York': '纽约时间 (EST)',
+            'Europe/London': '伦敦时间 (GMT)',
+            'Asia/Tokyo': '东京时间 (JST)',
+            'Australia/Sydney': '悉尼时间 (AEST)'
+        };
+        
+        // 主题颜色
+        const themes = {
+            blue: ['#1a2a6c', '#3a7bd5', '#00d2ff'],
+            purple: ['#4B0082', '#8A2BE2', '#DA70D6'],
+            sunset: ['#FF5F6D', '#FFC371', '#FFE47A'],
+            night: ['#0F2027', '#203A43', '#2C5364']
+        };
+        
+        // 格式化时间数字，确保两位数显示
+        function formatTime(num) {
+            return num < 10 ? '0' + num : num;
+        }
+        
+        // 更新时钟函数
+        function updateClock() {
+            const now = new Date();
+            const selectedTimezone = timezoneSelect.value;
+            
+            let displayTime;
+            let timezoneText;
+            
+            if (selectedTimezone === 'local') {
+                displayTime = now;
+                timezoneText = timezoneNames['local'];
+            } else if (selectedTimezone === 'UTC') {
+                displayTime = new Date(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 
+                                       now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
+                timezoneText = timezoneNames['UTC'];
+            } else {
+                // 使用时区转换
+                const formatter = new Intl.DateTimeFormat('zh-CN', {
+                    timeZone: selectedTimezone,
+                    year: 'numeric',
+                    month: 'numeric',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    second: 'numeric'
+                });
+                
+                const parts = formatter.formatToParts(now);
+                const timeObj = {};
+                parts.forEach(part => {
+                    if (part.type !== 'literal') {
+                        timeObj[part.type] = part.value;
+                    }
+                });
+                
+                displayTime = new Date(
+                    parseInt(timeObj.year),
+                    parseInt(timeObj.month) - 1,
+                    parseInt(timeObj.day),
+                    parseInt(timeObj.hour),
+                    parseInt(timeObj.minute),
+                    parseInt(timeObj.second)
+                );
+                
+                timezoneText = timezoneNames[selectedTimezone];
+            }
+            
+            // 获取时间组件
+            const hours = displayTime.getHours();
+            const minutes = displayTime.getMinutes();
+            const seconds = displayTime.getSeconds();
+            const month = displayTime.getMonth();
+            const date = displayTime.getDate();
+            const year = displayTime.getFullYear();
+            const weekday = displayTime.getDay();
+            
+            // 更新显示
+            hourDisplay.textContent = formatTime(hours);
+            minuteDisplay.textContent = formatTime(minutes);
+            secondDisplay.textContent = formatTime(seconds);
+            
+            digitalHour.textContent = formatTime(hours);
+            digitalMinute.textContent = formatTime(minutes);
+            digitalSecond.textContent = formatTime(seconds);
+            
+            dateDisplay.textContent = `${year}年 ${months[month]} ${date}日`;
+            weekdayDisplay.textContent = weekdays[weekday];
+            
+            currentTimezone.textContent = timezoneText;
+            
+            // 更新时间戳
+            const updateNow = new Date();
+            updateTime.textContent = `${formatTime(updateNow.getHours())}:${formatTime(updateNow.getMinutes())}:${formatTime(updateNow.getSeconds())}`;
+        }
+        
+        // 改变主题
+        function changeTheme(themeName) {
+            const colors = themes[themeName];
+            document.body.style.background = `linear-gradient(135deg, ${colors[0]}, ${colors[1]}, ${colors[2]})`;
+            
+            // 保存主题到本地存储
+            localStorage.setItem('clockTheme', themeName);
+        }
+        
+        // 初始化主题
+        function initTheme() {
+            const savedTheme = localStorage.getItem('clockTheme');
+            if (savedTheme && themes[savedTheme]) {
+                changeTheme(savedTheme);
+            }
+        }
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            updateClock(); // 立即更新一次
+            setInterval(updateClock, 1000); // 每秒更新一次
+            
+            // 当时区选择变化时更新时钟
+            timezoneSelect.addEventListener('change', updateClock);
+        });
+    </script>
+</body>
+</html>
