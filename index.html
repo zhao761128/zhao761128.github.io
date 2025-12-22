@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>实时时钟</title>
+    <title>zhao761128 studio - 提瓦特观察站</title>
+    <!-- 引入GSAP库以实现高级滚动动画（仅在用户未偏好减少动画时使用） -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -12,425 +15,818 @@
             box-sizing: border-box;
             font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
         }
-        
+
+        html {
+            scroll-behavior: smooth;
+            overflow-x: hidden;
+        }
+
         body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            background-color: #ffffff;
+            color: #333;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* 导航点 */
+        .nav-dots {
+            position: fixed;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+        }
+
+        .dot {
+            display: block;
+            width: 12px;
+            height: 12px;
+            background-color: rgba(59, 130, 246, 0.3);
+            border-radius: 50%;
+            margin: 15px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .dot.active {
+            background-color: #3B82F6;
+            transform: scale(1.4);
+            border-color: #ffffff;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+
+        .dot:focus {
+            outline: 3px solid rgba(59,130,246,0.25);
+            outline-offset: 3px;
+        }
+
+        /* 全屏页面部分 */
+        .page-section {
             min-height: 100vh;
-            background: linear-gradient(135deg, #1a2a6c, #3a7bd5, #00d2ff);
-            color: #fff;
-            padding: 20px;
-            transition: background 1s ease;
-        }
-        
-        .container {
             width: 100%;
-            max-width: 900px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            padding: 40px 20px;
+        }
+
+        /* 内容容器 */
+        .content-container {
+            max-width: 1200px;
+            width: 100%;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 背景图片层 */
+        .background-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .background-image {
+            position: absolute;
+            width: 100%;
+            height: 120%;
+            object-fit: cover;
+            opacity: 0.9;
+        }
+
+        /* 封面部分 */
+        #cover {
+            background-color: #0f172a;
+            color: white;
             text-align: center;
-            padding: 30px;
-            background-color: rgba(0, 0, 0, 0.7);
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(10px);
         }
-        
-        header {
-            margin-bottom: 30px;
+
+        #cover .background-image {
+            opacity: 0.4;
+            filter: brightness(0.7);
         }
-        
-        h1 {
-            font-size: 3rem;
-            margin-bottom: 10px;
-            background: linear-gradient(to right, #ff7e5f, #feb47b);
+
+        .logo {
+            font-size: 4.5rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, #ffffff, #93C5FD);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
-            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            text-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
-        
-        .subtitle {
-            font-size: 1.2rem;
-            opacity: 0.9;
-            font-weight: 300;
-        }
-        
-        .clock-container {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 30px;
-            margin-bottom: 40px;
-        }
-        
-        .time-section {
-            flex: 1;
-            min-width: 250px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 25px 20px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-            transition: transform 0.3s, background 0.3s;
-        }
-        
-        .time-section:hover {
-            transform: translateY(-5px);
-            background: rgba(255, 255, 255, 0.15);
-        }
-        
-        .time-label {
-            font-size: 1.3rem;
-            margin-bottom: 15px;
-            color: #a0d2ff;
-            font-weight: 500;
-        }
-        
-        .time-display {
-            font-size: 3.5rem;
-            font-weight: 700;
-            letter-spacing: 2px;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-        }
-        
-        .date-display {
-            font-size: 2rem;
-            margin: 20px 0;
-            color: #f8f8f8;
-        }
-        
-        .weekday-display {
+
+        .tagline {
             font-size: 1.8rem;
-            color: #ffcc70;
-            margin-bottom: 30px;
-            font-weight: 600;
-        }
-        
-        .timezone-selector {
-            margin-bottom: 30px;
-        }
-        
-        .timezone-selector select {
-            padding: 12px 20px;
-            font-size: 1.1rem;
-            background: rgba(255, 255, 255, 0.15);
-            color: white;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
-            outline: none;
-            cursor: pointer;
-            width: 100%;
-            max-width: 300px;
-        }
-        
-        .timezone-selector select option {
-            background-color: #2a2a5a;
-            color: white;
-        }
-        
-        .footer {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
-            font-size: 0.9rem;
-            opacity: 0.8;
-        }
-        
-        .digital-clock {
-            font-size: 2.5rem;
-            font-weight: 600;
+            color: #93C5FD;
+            margin-bottom: 40px;
+            font-weight: 300;
             letter-spacing: 3px;
-            margin: 25px 0;
-            padding: 20px;
-            background: rgba(0, 0, 0, 0.4);
-            border-radius: 15px;
-            display: inline-block;
-            box-shadow: 0 0 20px rgba(0, 210, 255, 0.3);
         }
-        
-        .digital-clock .blink {
-            animation: blink 1s infinite;
+
+        .scroll-hint {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #93C5FD;
+            font-size: 1.2rem;
+            animation: bounce 2s infinite;
         }
-        
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+            40% { transform: translateX(-50%) translateY(-10px); }
+            60% { transform: translateX(-50%) translateY(-5px); }
         }
-        
-        .theme-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 20px;
-            flex-wrap: wrap;
+
+        /* 关于部分 */
+        #about {
+            background-color: #ffffff;
         }
-        
-        .theme-btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 50px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
+
+        .about-content {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 60px;
         }
-        
-        .theme-btn.blue {
-            background: linear-gradient(to right, #3a7bd5, #00d2ff);
+
+        .character-image {
+            flex: 1;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            transform: translateY(30px);
+            opacity: 0;
+        }
+
+        .character-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .about-text {
+            flex: 1;
+            transform: translateY(30px);
+            opacity: 0;
+        }
+
+        .section-title {
+            font-size: 2.8rem;
+            color: #1E40AF;
+            margin-bottom: 25px;
+            font-weight: 700;
+        }
+
+        .section-text {
+            font-size: 1.3rem;
+            color: #4B5563;
+            line-height: 1.8;
+        }
+
+        /* 观察日志部分 */
+        #observations {
+            background-color: #F8FAFC;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+            transform: translateY(30px);
+            opacity: 0;
+        }
+
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+        }
+
+        .observation-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            transform: translateY(50px);
+            opacity: 0;
+            transition: transform 0.5s ease, box-shadow 0.3s ease;
+        }
+
+        .observation-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-image {
+            height: 220px;
+            width: 100%;
+            object-fit: cover;
+        }
+
+        .card-content {
+            padding: 30px;
+        }
+
+        .card-title {
+            font-size: 1.6rem;
+            color: #1E40AF;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .card-text {
+            color: #6B7280;
+            font-size: 1.1rem;
+            line-height: 1.7;
+        }
+
+        /* 近期焦点部分 */
+        #focus {
+            background-color: #ffffff;
+        }
+
+        .focus-items {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 40px;
+        }
+
+        .focus-item {
+            text-align: center;
+            width: 200px;
+            transform: translateY(30px);
+            opacity: 0;
+        }
+
+        .focus-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 2rem;
             color: white;
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2);
         }
-        
-        .theme-btn.purple {
-            background: linear-gradient(to right, #8A2BE2, #DA70D6);
+
+        .focus-text {
+            font-size: 1.2rem;
+            color: #1F2937;
+            font-weight: 500;
+        }
+
+        /* 联系部分 */
+        #contact {
+            background-color: #F8FAFC;
+        }
+
+        .contact-content {
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto;
+            transform: translateY(30px);
+            opacity: 0;
+        }
+
+        .contact-title {
+            font-size: 2.5rem;
+            color: #1E40AF;
+            margin-bottom: 20px;
+        }
+
+        .contact-subtitle {
+            font-size: 1.3rem;
+            color: #6B7280;
+            margin-bottom: 40px;
+        }
+
+        .email-button {
+            display: inline-block;
+            padding: 18px 45px;
+            background: linear-gradient(90deg, #3B82F6, #1D4ED8);
             color: white;
+            font-size: 1.3rem;
+            font-weight: 600;
+            border-radius: 50px;
+            text-decoration: none;
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
         }
-        
-        .theme-btn.sunset {
-            background: linear-gradient(to right, #FF5F6D, #FFC371);
-            color: white;
+
+        .email-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(59, 130, 246, 0.4);
         }
-        
-        .theme-btn.night {
-            background: linear-gradient(to right, #0F2027, #203A43, #2C5364);
-            color: white;
+
+        /* 响应式设计 */
+        @media (max-width: 992px) {
+            .logo {
+                font-size: 3.5rem;
+            }
+            
+            .about-content {
+                flex-direction: column;
+                gap: 40px;
+            }
+            
+            .section-title {
+                font-size: 2.3rem;
+            }
         }
-        
-        .theme-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        }
-        
+
         @media (max-width: 768px) {
-            h1 {
-                font-size: 2.2rem;
+            .logo {
+                font-size: 2.8rem;
             }
             
-            .time-display {
-                font-size: 2.5rem;
+            .tagline {
+                font-size: 1.4rem;
             }
             
-            .date-display {
-                font-size: 1.5rem;
+            .cards-container {
+                grid-template-columns: 1fr;
             }
             
-            .digital-clock {
-                font-size: 1.8rem;
-                letter-spacing: 2px;
+            .nav-dots {
+                right: 15px;
             }
             
-            .container {
-                padding: 20px;
+            .page-section {
+                padding: 60px 20px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1><i class="fas fa-clock"></i> 实时时钟</h1>
-            <p class="subtitle">准确显示当前日期、时间和星期，每秒钟自动更新</p>
-        </header>
-        
-        <div class="date-display" id="dateDisplay"></div>
-        <div class="weekday-display" id="weekdayDisplay"></div>
-        
-        <div class="clock-container">
-            <div class="time-section">
-                <div class="time-label">小时</div>
-                <div class="time-display" id="hourDisplay">00</div>
+    <!-- 导航点 -->
+    <nav class="nav-dots" aria-label="页面导航（章节）">
+        <a href="#cover" class="dot active" data-section="cover" aria-label="封面" role="button" tabindex="0"></a>
+        <a href="#about" class="dot" data-section="about" aria-label="关于" role="button" tabindex="0"></a>
+        <a href="#observations" class="dot" data-section="observations" aria-label="观察日志" role="button" tabindex="0"></a>
+        <a href="#focus" class="dot" data-section="focus" aria-label="近期焦点" role="button" tabindex="0"></a>
+        <a href="#contact" class="dot" data-section="contact" aria-label="联系" role="button" tabindex="0"></a>
+    </nav>
+
+    <!-- 封面部分 -->
+    <section id="cover" class="page-section" aria-label="封面">
+        <div class="background-layer" aria-hidden="true">
+            <!-- ⚠️ 请替换为你的封面背景图URL -->
+            <!-- ⚠️ COVER_BACKGROUND_IMAGE_URL -->
+            <img src="https://images.unsplash.com/photo-1518709268805-4e9042af2176?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80" alt="封面背景" class="background-image">
+        </div>
+        <div class="content-container">
+            <h1 class="logo">zhao761128 studio</h1>
+            <!-- ⚠️ 请替换为你的标语 -->
+            <!-- ⚠️ COVER_TAGLINE_TEXT -->
+            <p class="tagline">「驻此世间的提瓦特观察站」</p>
+        </div>
+        <div class="scroll-hint" aria-hidden="true">
+            <i class="fas fa-chevron-down"></i> 向下滚动探索
+        </div>
+    </section>
+
+    <!-- 关于部分 -->
+    <section id="about" class="page-section" aria-label="关于">
+        <div class="content-container">
+            <div class="about-content">
+                <div class="character-image">
+                    <!-- ⚠️ 请替换为你喜欢的角色图片URL -->
+                    <!-- ⚠️ CHARACTER_IMAGE_URL -->
+                    <img loading="lazy" src="https://images.unsplash.com/photo-1579546929662-711aa81148cf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="角色图像">
+                </div>
+                <div class="about-text">
+                    <h2 class="section-title">关于此站</h2>
+                    <p class="section-text">
+                        此处是观察员 zhao761128 的站点，主要记录对提瓦特大陆的探索心得、美学收藏与漫游随想。
+                        这里不生产什么，只是兴趣的陈列室，一个连接现实与幻想的数字角落。
+                        如果你也热爱《原神》所构建的那个世界，或许我们能在此产生共鸣。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 观察日志部分 -->
+    <section id="observations" class="page-section" aria-label="观察日志">
+        <div class="content-container">
+            <div class="section-header">
+                <h2 class="section-title">观察日志</h2>
+                <p class="section-text" style="max-width: 700px; margin: 0 auto;">
+                    记录在提瓦特大陆漫游时的美学发现与片刻感悟
+                </p>
             </div>
             
-            <div class="time-section">
-                <div class="time-label">分钟</div>
-                <div class="time-display" id="minuteDisplay">00</div>
+            <div class="cards-container">
+                <!-- 卡片1 -->
+                <div class="observation-card">
+                    <!-- ⚠️ 请替换为你的第一张观察日志图片URL -->
+                    <!-- ⚠️ OBSERVATION_IMAGE_1_URL -->
+                    <img loading="lazy" src="https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="观察日志1" class="card-image">
+                    <div class="card-content">
+                        <h3 class="card-title">角色美学鉴赏</h3>
+                        <p class="card-text">
+                            深入研究《原神》角色设计的美学逻辑，从服饰细节、色彩搭配到角色背景故事如何通过视觉元素呈现。
+                            每个角色都是一个完整的世界观表达。
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- 卡片2 -->
+                <div class="observation-card">
+                    <!-- ⚠️ 请替换为你的第二张观察日志图片URL -->
+                    <!-- ⚠️ OBSERVATION_IMAGE_2_URL -->
+                    <img loading="lazy" src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="观察日志2" class="card-image">
+                    <div class="card-content">
+                        <h3 class="card-title">场景建筑巡礼</h3>
+                        <p class="card-text">
+                            从璃月的传统中式建筑到枫丹的欧式风情，探索提瓦特大陆各地域的建筑风格与文化参考。
+                            虚拟世界的构建如何反映现实美学？
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- 卡片3 -->
+                <div class="observation-card">
+                    <!-- ⚠️ 请替换为你的第三张观察日志图片URL -->
+                    <!-- ⚠️ OBSERVATION_IMAGE_3_URL -->
+                    <img loading="lazy" src="https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="观察日志3" class="card-image">
+                    <div class="card-content">
+                        <h3 class="card-title">原声集收藏</h3>
+                        <p class="card-text">
+                            陈致逸与HOYO-MiX打造的游戏原声不仅是背景音乐，更是地域文化的听觉符号。
+                            收藏并分析各区域主题音乐如何增强游戏沉浸感。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 近期焦点部分 -->
+    <section id="focus" class="page-section" aria-label="近期焦点">
+        <div class="content-container">
+            <div class="section-header">
+                <h2 class="section-title">近期焦点</h2>
+                <p class="section-text" style="max-width: 700px; margin: 0 auto;">
+                    当前正在关注与探索的内容
+                </p>
             </div>
             
-            <div class="time-section">
-                <div class="time-label">秒钟</div>
-                <div class="time-display" id="secondDisplay">00</div>
+            <div class="focus-items">
+                <div class="focus-item">
+                    <div class="focus-icon">
+                        <i class="fas fa-map-marked-alt" aria-hidden="true"></i>
+                    </div>
+                    <p class="focus-text">探索中：4.6版本「两界为火，赤夜将熄」</p>
+                </div>
+                
+                <div class="focus-item">
+                    <div class="focus-icon">
+                        <i class="fas fa-user-ninja" aria-hidden="true"></i>
+                    </div>
+                    <p class="focus-text">当前角色：阿蕾奇诺</p>
+                </div>
+                
+                <div class="focus-item">
+                    <div class="focus-icon">
+                        <i class="fas fa-music" aria-hidden="true"></i>
+                    </div>
+                    <p class="focus-text">循环播放：轻涟</p>
+                </div>
+                
+                <div class="focus-item">
+                    <div class="focus-icon">
+                        <i class="fas fa-palette" aria-hidden="true"></i>
+                    </div>
+                    <p class="focus-text">研究主题：枫丹视觉美学</p>
+                </div>
             </div>
         </div>
-        
-        <div class="digital-clock" id="digitalClock">
-            <span id="digitalHour">00</span>:<span id="digitalMinute">00</span>:<span class="blink" id="digitalSecond">00</span>
+    </section>
+
+    <!-- 联系部分 -->
+    <section id="contact" class="page-section" aria-label="联系">
+        <div class="content-container">
+            <div class="contact-content">
+                <h2 class="contact-title">联系观测员</h2>
+                <p class="contact-subtitle">
+                    如果你对提瓦特世界也有独到的观察与见解，欢迎来信交流分享
+                </p>
+                <!-- ⚠️ 请替换为你的邮箱地址 -->
+                <!-- ⚠️ YOUR_EMAIL_ADDRESS -->
+                <a href="mailto:YOUR_EMAIL@EXAMPLE.COM" class="email-button" aria-label="发送邮件">
+                    <i class="fas fa-paper-plane" aria-hidden="true"></i> 发送邮件
+                </a>
+            </div>
         </div>
-        
-        <div class="timezone-selector">
-            <select id="timezoneSelect">
-                <option value="local">本地时间</option>
-                <option value="UTC">协调世界时 (UTC)</option>
-                <option value="America/New_York">纽约时间 (EST)</option>
-                <option value="Europe/London">伦敦时间 (GMT)</option>
-                <option value="Asia/Tokyo">东京时间 (JST)</option>
-                <option value="Australia/Sydney">悉尼时间 (AEST)</option>
-            </select>
-        </div>
-        
-        <div class="theme-buttons">
-            <button class="theme-btn blue" onclick="changeTheme('blue')">
-                <i class="fas fa-water"></i> 海洋蓝
-            </button>
-            <button class="theme-btn purple" onclick="changeTheme('purple')">
-                <i class="fas fa-moon"></i> 梦幻紫
-            </button>
-            <button class="theme-btn sunset" onclick="changeTheme('sunset')">
-                <i class="fas fa-sun"></i> 日落橙
-            </button>
-            <button class="theme-btn night" onclick="changeTheme('night')">
-                <i class="fas fa-star"></i> 深空夜
-            </button>
-        </div>
-        
-        <div class="footer">
-            <p>© 2023 实时时钟 | 当前时区: <span id="currentTimezone">本地时间</span> | 更新时间: <span id="updateTime">--:--:--</span></p>
-        </div>
-    </div>
+    </section>
 
     <script>
-        // 获取DOM元素
-        const hourDisplay = document.getElementById('hourDisplay');
-        const minuteDisplay = document.getElementById('minuteDisplay');
-        const secondDisplay = document.getElementById('secondDisplay');
-        const dateDisplay = document.getElementById('dateDisplay');
-        const weekdayDisplay = document.getElementById('weekdayDisplay');
-        const digitalHour = document.getElementById('digitalHour');
-        const digitalMinute = document.getElementById('digitalMinute');
-        const digitalSecond = document.getElementById('digitalSecond');
-        const timezoneSelect = document.getElementById('timezoneSelect');
-        const currentTimezone = document.getElementById('currentTimezone');
-        const updateTime = document.getElementById('updateTime');
-        
-        // 星期几的中文名称
-        const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
-        
-        // 月份的中文名称
-        const months = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
-        
-        // 时区映射
-        const timezoneNames = {
-            'local': '本地时间',
-            'UTC': '协调世界时 (UTC)',
-            'America/New_York': '纽约时间 (EST)',
-            'Europe/London': '伦敦时间 (GMT)',
-            'Asia/Tokyo': '东京时间 (JST)',
-            'Australia/Sydney': '悉尼时间 (AEST)'
-        };
-        
-        // 主题颜色
-        const themes = {
-            blue: ['#1a2a6c', '#3a7bd5', '#00d2ff'],
-            purple: ['#4B0082', '#8A2BE2', '#DA70D6'],
-            sunset: ['#FF5F6D', '#FFC371', '#FFE47A'],
-            night: ['#0F2027', '#203A43', '#2C5364']
-        };
-        
-        // 格式化时间数字，确保两位数显示
-        function formatTime(num) {
-            return num < 10 ? '0' + num : num;
-        }
-        
-        // 更新时钟函数
-        function updateClock() {
-            const now = new Date();
-            const selectedTimezone = timezoneSelect.value;
-            
-            let displayTime;
-            let timezoneText;
-            
-            if (selectedTimezone === 'local') {
-                displayTime = now;
-                timezoneText = timezoneNames['local'];
-            } else if (selectedTimezone === 'UTC') {
-                displayTime = new Date(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 
-                                       now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
-                timezoneText = timezoneNames['UTC'];
+        document.addEventListener('DOMContentLoaded', function() {
+            // 尊重用户“减少动画”偏好
+            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            // 如果用户偏好减少动画，略过 GSAP 动画
+            if (!prefersReducedMotion && typeof gsap !== 'undefined') {
+                gsap.registerPlugin(ScrollTrigger);
+            }
+
+            initNavigationDots();
+            setupSmoothScrollForInternalLinks();
+            if (!prefersReducedMotion && typeof gsap !== 'undefined') {
+                setupAnimations();
+                setupScrollTriggers();
             } else {
-                // 使用时区转换
-                const formatter = new Intl.DateTimeFormat('zh-CN', {
-                    timeZone: selectedTimezone,
-                    year: 'numeric',
-                    month: 'numeric',
-                    day: 'numeric',
-                    hour: 'numeric',
-                    minute: 'numeric',
-                    second: 'numeric'
+                // 若偏好减少动画，直接将相关元素设为可见（避免留在初始隐形状态）
+                const visibleEls = document.querySelectorAll('.character-image, .about-text, .section-header, .observation-card, .focus-item, .contact-content');
+                visibleEls.forEach(el => {
+                    el.style.opacity = '1';
+                    el.style.transform = 'none';
                 });
-                
-                const parts = formatter.formatToParts(now);
-                const timeObj = {};
-                parts.forEach(part => {
-                    if (part.type !== 'literal') {
-                        timeObj[part.type] = part.value;
+            }
+
+            // 初始化滚轮整页滚动（保留原逻辑，但略作防抖）
+            setupWheelSnap();
+        });
+
+        // 平滑滚动函数（可被多个地方复用）
+        function smoothScrollTo(targetElement) {
+            if (!targetElement) return;
+            window.scrollTo({
+                top: targetElement.offsetTop,
+                behavior: 'smooth'
+            });
+        }
+
+        // 为内部锚点添加统一的平滑滚动（避免重复绑定）
+        function setupSmoothScrollForInternalLinks() {
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    const targetId = this.getAttribute('href');
+                    if (!targetId || targetId === '#') return;
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        e.preventDefault();
+                        smoothScrollTo(targetElement);
                     }
                 });
-                
-                displayTime = new Date(
-                    parseInt(timeObj.year),
-                    parseInt(timeObj.month) - 1,
-                    parseInt(timeObj.day),
-                    parseInt(timeObj.hour),
-                    parseInt(timeObj.minute),
-                    parseInt(timeObj.second)
-                );
-                
-                timezoneText = timezoneNames[selectedTimezone];
+            });
+        }
+
+        // 导航点功能（带节流、键盘支持）
+        function initNavigationDots() {
+            const dots = Array.from(document.querySelectorAll('.nav-dots .dot'));
+            const sections = Array.from(document.querySelectorAll('.page-section'));
+
+            // 点击和键盘事件
+            dots.forEach(dot => {
+                const href = dot.getAttribute('href');
+                dot.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const target = document.querySelector(href);
+                    smoothScrollTo(target);
+                });
+
+                // 支持键盘操作（Enter / Space）
+                dot.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        this.click();
+                    }
+                });
+            });
+
+            // 节流使用 requestAnimationFrame
+            let ticking = false;
+            function onScroll() {
+                if (ticking) return;
+                ticking = true;
+                window.requestAnimationFrame(() => {
+                    updateActiveDot();
+                    ticking = false;
+                });
             }
-            
-            // 获取时间组件
-            const hours = displayTime.getHours();
-            const minutes = displayTime.getMinutes();
-            const seconds = displayTime.getSeconds();
-            const month = displayTime.getMonth();
-            const date = displayTime.getDate();
-            const year = displayTime.getFullYear();
-            const weekday = displayTime.getDay();
-            
-            // 更新显示
-            hourDisplay.textContent = formatTime(hours);
-            minuteDisplay.textContent = formatTime(minutes);
-            secondDisplay.textContent = formatTime(seconds);
-            
-            digitalHour.textContent = formatTime(hours);
-            digitalMinute.textContent = formatTime(minutes);
-            digitalSecond.textContent = formatTime(seconds);
-            
-            dateDisplay.textContent = `${year}年 ${months[month]} ${date}日`;
-            weekdayDisplay.textContent = weekdays[weekday];
-            
-            currentTimezone.textContent = timezoneText;
-            
-            // 更新时间戳
-            const updateNow = new Date();
-            updateTime.textContent = `${formatTime(updateNow.getHours())}:${formatTime(updateNow.getMinutes())}:${formatTime(updateNow.getSeconds())}`;
-        }
-        
-        // 改变主题
-        function changeTheme(themeName) {
-            const colors = themes[themeName];
-            document.body.style.background = `linear-gradient(135deg, ${colors[0]}, ${colors[1]}, ${colors[2]})`;
-            
-            // 保存主题到本地存储
-            localStorage.setItem('clockTheme', themeName);
-        }
-        
-        // 初始化主题
-        function initTheme() {
-            const savedTheme = localStorage.getItem('clockTheme');
-            if (savedTheme && themes[savedTheme]) {
-                changeTheme(savedTheme);
+
+            function updateActiveDot() {
+                let current = '';
+                const scrollPos = window.scrollY;
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    const sectionHeight = section.clientHeight;
+                    if (scrollPos >= (sectionTop - sectionHeight / 3)) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                dots.forEach(dot => {
+                    dot.classList.toggle('active', dot.getAttribute('href').substring(1) === current);
+                });
             }
+
+            window.addEventListener('scroll', onScroll, { passive: true });
+            // 初始化一次
+            updateActiveDot();
         }
-        
-        // 页面加载时初始化
-        document.addEventListener('DOMContentLoaded', () => {
-            initTheme();
-            updateClock(); // 立即更新一次
-            setInterval(updateClock, 1000); // 每秒更新一次
-            
-            // 当时区选择变化时更新时钟
-            timezoneSelect.addEventListener('change', updateClock);
-        });
+
+        // GSAP 动画（仅在允许动画时执行）
+        function setupAnimations() {
+            // 封面元素动画
+            gsap.from('.logo', {
+                duration: 1.5,
+                y: 50,
+                opacity: 0,
+                ease: 'power3.out'
+            });
+
+            gsap.from('.tagline', {
+                duration: 1.5,
+                y: 30,
+                opacity: 0,
+                delay: 0.5,
+                ease: 'power3.out'
+            });
+
+            // 关于部分元素
+            gsap.from('.character-image', {
+                scrollTrigger: {
+                    trigger: '#about',
+                    start: 'top 70%',
+                    toggleActions: 'play none none reverse'
+                },
+                duration: 1.2,
+                y: 30,
+                opacity: 0,
+                ease: 'power3.out'
+            });
+
+            gsap.from('.about-text', {
+                scrollTrigger: {
+                    trigger: '#about',
+                    start: 'top 70%',
+                    toggleActions: 'play none none reverse'
+                },
+                duration: 1.2,
+                y: 30,
+                opacity: 0,
+                delay: 0.2,
+                ease: 'power3.out'
+            });
+
+            // 观察日志标题
+            gsap.from('.section-header', {
+                scrollTrigger: {
+                    trigger: '#observations',
+                    start: 'top 80%',
+                    toggleActions: 'play none none reverse'
+                },
+                duration: 1.2,
+                y: 30,
+                opacity: 0,
+                ease: 'power3.out'
+            });
+
+            // 卡片动画
+            const cards = document.querySelectorAll('.observation-card');
+            cards.forEach((card, index) => {
+                gsap.from(card, {
+                    scrollTrigger: {
+                        trigger: card,
+                        start: 'top 85%',
+                        toggleActions: 'play none none reverse'
+                    },
+                    duration: 1,
+                    y: 50,
+                    opacity: 0,
+                    delay: index * 0.08,
+                    ease: 'power3.out'
+                });
+            });
+
+            // 近期焦点项目
+            const focusItems = document.querySelectorAll('.focus-item');
+            focusItems.forEach((item, index) => {
+                gsap.from(item, {
+                    scrollTrigger: {
+                        trigger: '#focus',
+                        start: 'top 80%',
+                        toggleActions: 'play none none reverse'
+                    },
+                    duration: 1,
+                    y: 30,
+                    opacity: 0,
+                    delay: index * 0.12,
+                    ease: 'power3.out'
+                });
+            });
+
+            // 联系部分
+            gsap.from('.contact-content', {
+                scrollTrigger: {
+                    trigger: '#contact',
+                    start: 'top 80%',
+                    toggleActions: 'play none none reverse'
+                },
+                duration: 1.2,
+                y: 30,
+                opacity: 0,
+                ease: 'power3.out'
+            });
+        }
+
+        // GSAP 视差及滚动触发器（仅在允许时运行）
+        function setupScrollTriggers() {
+            // 封面背景视差
+            const coverBg = document.querySelector('#cover .background-image');
+            if (coverBg) {
+                gsap.to(coverBg, {
+                    scrollTrigger: {
+                        trigger: '#cover',
+                        start: 'top top',
+                        end: 'bottom top',
+                        scrub: true
+                    },
+                    y: '20%',
+                    ease: 'none'
+                });
+            }
+
+            // 其他部分的背景视差
+            const sections = document.querySelectorAll('.page-section');
+            sections.forEach(section => {
+                const bgImage = section.querySelector('.background-image');
+                if (bgImage && section.id !== 'cover') {
+                    gsap.to(bgImage, {
+                        scrollTrigger: {
+                            trigger: section,
+                            start: 'top bottom',
+                            end: 'bottom top',
+                            scrub: true
+                        },
+                        y: '15%',
+                        ease: 'none'
+                    });
+                }
+            });
+        }
+
+        // 简单的整页滚动（鼠标滚轮触发）- 保持你的逻辑，但做了小优化
+        function setupWheelSnap() {
+            let isScrolling = false;
+            window.addEventListener('wheel', function(e) {
+                // 如果正在执行平滑滚动，忽略本次事件
+                if (isScrolling) return;
+
+                // 防止在联系部分过度向下滚动
+                const contactSection = document.getElementById('contact');
+                if (contactSection) {
+                    const contactRect = contactSection.getBoundingClientRect();
+                    if (contactRect.top <= 50 && e.deltaY > 0) return;
+                }
+
+                const sections = Array.from(document.querySelectorAll('.page-section'));
+                // 找到当前可视的 section
+                let currentIndex = 0;
+                sections.forEach((section, index) => {
+                    const rect = section.getBoundingClientRect();
+                    if (rect.top >= -10 && rect.top < window.innerHeight / 2) {
+                        currentIndex = index;
+                    }
+                });
+
+                let targetIndex = currentIndex;
+                if (e.deltaY > 0 && currentIndex < sections.length - 1) {
+                    targetIndex = currentIndex + 1;
+                } else if (e.deltaY < 0 && currentIndex > 0) {
+                    targetIndex = currentIndex - 1;
+                }
+
+                if (targetIndex !== currentIndex) {
+                    isScrolling = true;
+                    window.scrollTo({
+                        top: sections[targetIndex].offsetTop,
+                        behavior: 'smooth'
+                    });
+                    // 允许滚动动作完成后再次触发（800ms）
+                    setTimeout(() => {
+                        isScrolling = false;
+                    }, 800);
+                }
+            }, { passive: true });
+        }
     </script>
 </body>
 </html>
